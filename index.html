@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>소담장 - 나의 여행 기록</title>
+    <!-- Tailwind CSS 및 FontAwesome 아이콘 불러오기 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- 구글 폰트 (Noto Sans KR & Gowun Batang) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Noto Sans KR', 'sans-serif'],
+                        serif: ['Gowun Batang', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* 폰트 미세 조정 및 스무스한 전환 효과 */
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #fcfbf7; /* 소담한 느낌의 따뜻한 미색 */
+        }
+        .serif-title {
+            font-family: 'Gowun Batang', serif;
+        }
+        /* 스크롤바 커스텀 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col text-slate-800">
+
+    <!-- 헤더 영역 -->
+    <header class="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-stone-100 shadow-sm transition-all duration-300">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
+            <!-- 로고 및 서브 타이틀 -->
+            <div class="flex items-baseline gap-3">
+                <a href="#" onclick="filterPosts('all', document.getElementById('btn-all'))" class="logo text-2xl font-bold text-stone-800 tracking-tight serif-title">
+                    소담장<span class="text-emerald-600">.</span>
+                </a>
+                <span class="text-xs text-stone-400 font-light hidden sm:inline">소소하게 담아내는 여행의 비장</span>
+            </div>
+            
+            <!-- 우측 액션 영역 (글쓰기 버튼 등) -->
+            <div class="flex items-center gap-3">
+                <button onclick="openWriteModal()" class="flex items-center gap-2 bg-stone-900 hover:bg-emerald-700 text-white text-sm px-4 py-2.5 rounded-full transition-all shadow-sm hover:shadow-md font-medium">
+                    <i class="fa-solid fa-pen-fancy text-xs"></i>
+                    <span>새 여행 기록하기</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 카테고리 내비게이션 -->
+        <div class="border-t border-stone-100 bg-stone-50/50">
+            <div class="max-w-6xl mx-auto px-4 py-2.5 overflow-x-auto flex gap-2 scrollbar-none">
+                <button id="btn-all" class="tab-btn active px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all bg-emerald-600 text-white" onclick="filterPosts('all', this)">
+                    전체보기
+                </button>
+                <button id="btn-world" class="tab-btn px-4 py-1.5 rounded-full text-sm font-medium text-stone-600 hover:bg-stone-200/60 whitespace-nowrap transition-all" onclick="filterPosts('world', this)">
+                    🌍 세계여행
+                </button>
+                <button id="btn-domestic" class="tab-btn px-4 py-1.5 rounded-full text-sm font-medium text-stone-600 hover:bg-stone-200/60 whitespace-nowrap transition-all" onclick="filterPosts('domestic', this)">
+                    🏞️ 국내여행
+                </button>
+                <button id="btn-bike" class="tab-btn px-4 py-1.5 rounded-full text-sm font-medium text-stone-600 hover:bg-stone-200/60 whitespace-nowrap transition-all" onclick="filterPosts('bike', this)">
+                    🚴 자전거여행
+                </button>
+                <button id="btn-etc" class="tab-btn px-4 py-1.5 rounded-full text-sm font-medium text-stone-600 hover:bg-stone-200/60 whitespace-nowrap transition-all" onclick="filterPosts('etc', this)">
+                    🎒 기타
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 메인 레이아웃 -->
+    <main class="max-w-6xl w-full mx-auto px-4 py-8 flex-grow">
+        <!-- 인트로 배너 -->
+        <section class="relative bg-gradient-to-r from-stone-800 to-stone-700 text-white rounded-2xl p-8 md:p-12 mb-10 overflow-hidden shadow-sm">
+            <div class="absolute -right-10 -bottom-10 opacity-10 text-[180px] pointer-events-none">
+                <i class="fa-solid fa-compass"></i>
+            </div>
+            <div class="relative z-10 max-w-xl">
+                <span class="inline-block bg-white/10 text-white text-xs px-3 py-1 rounded-full backdrop-blur-sm mb-4 font-light">My Travel Log</span>
+                <h1 class="text-3xl md:text-4xl font-bold mb-4 serif-title leading-snug">발길이 닿고 눈길이 머문<br>그 모든 날의 조각들</h1>
+                <p class="text-stone-300 text-sm md:text-base leading-relaxed font-light">
+                    세계의 낯선 공기, 국내 구석구석 숨겨진 숲길, 그리고 페달을 밟으며 흐르는 땀방울까지. 소담장에 차곡차곡 채워나갑니다.
+                </p>
+            </div>
+        </section>
+
+        <!-- 포스트 그리드 및 검색/통계 간략 영역 -->
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-bold text-stone-800 serif-title flex items-center gap-2">
+                <span class="w-1.5 h-6 bg-emerald-600 rounded-full inline-block"></span>
+                <span id="current-category-title">전체 여정</span>
+                <span id="post-count" class="text-xs bg-stone-200 text-stone-600 px-2 py-0.5 rounded-full font-sans">0</span>
+            </h3>
+        </div>
+
+        <!-- 실제 포스트들이 렌더링될 영역 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="postsContainer">
+            <!-- 자바스크립트를 통해 동적으로 카드가 생성 및 삽입됩니다 -->
+        </div>
+
+        <!-- 포스트가 없을 때 노출할 엠프티 상태 -->
+        <div id="emptyState" class="hidden flex-col items-center justify-center py-20 text-center">
+            <div class="text-stone-300 text-5xl mb-4">
+                <i class="fa-regular fa-folder-open"></i>
+            </div>
+            <p class="text-stone-500 font-light mb-4">해당 카테고리에 등록된 여행 기록이 없습니다.</p>
+            <button onclick="openWriteModal()" class="text-sm bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-medium px-4 py-2 rounded-lg transition-colors">
+                첫 기록 남기기
+            </button>
+        </div>
+    </main>
+
+    <!-- 글쓰기 모달 (다이얼로그) -->
+    <div id="writeModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm transition-opacity duration-300">
+        <div class="bg-white rounded-2xl w-full max-w-lg shadow-2xl flex flex-col max-h-[90vh] scale-95 transition-transform duration-300 transform" id="modalContainer">
+            <!-- 모달 헤더 -->
+            <div class="p-6 border-b border-stone-100 flex items-center justify-between">
+                <h4 class="text-lg font-bold text-stone-800 serif-title flex items-center gap-2">
+                    <i class="fa-solid fa-map-location-dot text-emerald-600"></i>새로운 여행 기록 남기기
+                </h4>
+                <button onclick="closeWriteModal()" class="text-stone-400 hover:text-stone-600 transition-colors p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- 모달 바디 (양식) -->
+            <div class="p-6 overflow-y-auto space-y-4">
+                <!-- 테마 선택 -->
+                <div>
+                    <label class="block text-xs font-bold text-stone-600 uppercase tracking-wider mb-1.5">여행 테마 <span class="text-rose-500">*</span></label>
+                    <div class="grid grid-cols-2 gap-2" id="themeSelector">
+                        <button type="button" data-value="world" onclick="selectTheme('world')" class="theme-option flex items-center gap-2 border border-stone-200 hover:border-emerald-500 p-2.5 rounded-xl text-sm transition-all text-left">
+                            <span>🌍</span> 세계여행
+                        </button>
+                        <button type="button" data-value="domestic" onclick="selectTheme('domestic')" class="theme-option flex items-center gap-2 border border-stone-200 hover:border-emerald-500 p-2.5 rounded-xl text-sm transition-all text-left">
+                            <span>🏞️</span> 국내여행
+                        </button>
+                        <button type="button" data-value="bike" onclick="selectTheme('bike')" class="theme-option flex items-center gap-2 border border-stone-200 hover:border-emerald-500 p-2.5 rounded-xl text-sm transition-all text-left">
+                            <span>🚴</span> 자전거여행
+                        </button>
+                        <button type="button" data-value="etc" onclick="selectTheme('etc')" class="theme-option flex items-center gap-2 border border-stone-200 hover:border-emerald-500 p-2.5 rounded-xl text-sm transition-all text-left">
+                            <span>🎒</span> 기타 기록
+                        </button>
+                    </div>
+                    <input type="hidden" id="postTheme" value="">
+                </div>
+
+                <!-- 사진 첨부 영역 추가 -->
+                <div>
+                    <label class="block text-xs font-bold text-stone-600 uppercase tracking-wider mb-1.5">여행 사진 첨부</label>
+                    <div class="flex items-center gap-4">
+                        <label class="flex flex-col items-center justify-center w-24 h-24 border-2 border-dashed border-stone-200 rounded-xl cursor-pointer hover:border-emerald-500 hover:bg-stone-50 transition-all overflow-hidden relative">
+                            <div class="flex flex-col items-center justify-center text-stone-400" id="uploadPlaceholder">
+                                <i class="fa-solid fa-camera text-lg mb-1"></i>
+                                <span class="text-[10px]">사진 등록</span>
+                            </div>
+                            <img id="imagePreview" class="hidden w-full h-full object-cover absolute inset-0" alt="미리보기">
+                            <input type="file" id="postImage" accept="image/*" class="hidden" onchange="previewSelectedImage(this)">
+                        </label>
+                        <div class="flex-1 text-xs text-stone-400 space-y-1">
+                            <p>기억에 남는 순간의 사진을 올려주세요.</p>
+                            <p class="font-light">올리지 않는 경우 지정한 카드 색상으로 예쁜 테마 카드가 채워집니다.</p>
+                            <button type="button" id="btnRemoveImage" onclick="clearSelectedImage()" class="hidden text-rose-500 font-medium hover:underline mt-1">첨부 이미지 초기화</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 썸네일 색상/테마 무드 지정 -->
+                <div>
+                    <label class="block text-xs font-bold text-stone-600 uppercase tracking-wider mb-1.5">카드 무드색상 (사진 없을 때 적용)</label>
+                    <div class="flex gap-2.5">
+                        <label class="relative cursor-pointer">
+                            <input type="radio" name="moodColor" value="emerald" checked class="sr-only peer">
+                            <div class="w-8 h-8 rounded-full bg-emerald-100 border border-emerald-300 peer-checked:ring-2 peer-checked:ring-offset-2 peer-checked:ring-emerald-600 transition-all"></div>
+                        </label>
+                        <label class="relative cursor-pointer">
+                            <input type="radio" name="moodColor" value="indigo" class="sr-only peer">
+                            <div class="w-8 h-8 rounded-full bg-indigo-100 border border-indigo-300 peer-checked:ring-2 peer-checked:ring-offset-2 peer-checked:ring-indigo-600 transition-all"></div>
+                        </label>
+                        <label class="relative cursor-pointer">
+                            <input type="radio" name="moodColor" value="amber" class="sr-only peer">
+                            <div class="w-8 h-8 rounded-full bg-amber-100 border border-amber-300 peer-checked:ring-2 peer-checked:ring-offset-2 peer-checked:ring-amber-600 transition-all"></div>
+                        </label>
+                        <label class="relative cursor-pointer">
+                            <input type="radio" name="moodColor" value="rose" class="sr-only peer">
+                            <div class="w-8 h-8 rounded-full bg-rose-100 border border-rose-300 peer-checked:ring-2 peer-checked:ring-offset-2 peer-checked:ring-rose-600 transition-all"></div>
+                        </label>
+                        <label class="relative cursor-pointer">
+                            <input type="radio" name="moodColor" value="neutral" class="sr-only peer">
+                            <div class="w-8 h-8 rounded-full bg-stone-200 border border-stone-400 peer-checked:ring-2 peer-checked:ring-offset-2 peer-checked:ring-stone-600 transition-all"></div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 제목 -->
+                <div>
+                    <label for="postTitle" class="block text-xs font-bold text-stone-600 uppercase tracking-wider mb-1.5">기록 제목 <span class="text-rose-500">*</span></label>
+                    <input type="text" id="postTitle" placeholder="예) 스위스 인터라켄 패러글라이딩의 기억" class="w-full border border-stone-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none rounded-xl px-4 py-2.5 text-sm transition-all">
+                </div>
+
+                <!-- 내용 -->
+                <div>
+                    <label for="postExcerpt" class="block text-xs font-bold text-stone-600 uppercase tracking-wider mb-1.5">본문 한줄요약 및 본문 <span class="text-rose-500">*</span></label>
+                    <textarea id="postExcerpt" rows="4" placeholder="여정에서 느꼈던 설렘과 풍경, 나만의 경험을 편하게 써내려가 보세요." class="w-full border border-stone-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none rounded-xl px-4 py-2.5 text-sm transition-all resize-none"></textarea>
+                </div>
+
+                <!-- 날짜 지정 -->
+                <div>
+                    <label for="postDate" class="block text-xs font-bold text-stone-600 uppercase tracking-wider mb-1.5">다녀온 날짜 <span class="text-rose-500">*</span></label>
+                    <input type="date" id="postDate" class="w-full border border-stone-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none rounded-xl px-4 py-2.5 text-sm transition-all">
+                </div>
+            </div>
+
+            <!-- 모달 푸터 -->
+            <div class="p-6 border-t border-stone-100 bg-stone-50 rounded-b-2xl flex gap-3 justify-end">
+                <button type="button" onclick="closeWriteModal()" class="px-5 py-2.5 text-sm font-medium text-stone-500 hover:text-stone-700 transition-all">취소</button>
+                <button type="button" onclick="saveNewPost()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 text-sm font-medium rounded-xl transition-all shadow-sm">기록 보관하기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 커스텀 토스트 알림창 -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-12 opacity-0 pointer-events-none transition-all duration-300 bg-stone-900 text-white px-5 py-3.5 rounded-xl shadow-xl flex items-center gap-3">
+        <span id="toastIcon" class="text-emerald-400"></span>
+        <span id="toastMessage" class="text-sm font-medium"></span>
+    </div>
+
+    <!-- 푸터 영역 -->
+    <footer class="bg-stone-900 text-stone-400 py-12 px-4 mt-16 border-t border-stone-800">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+            <div class="text-center md:text-left">
+                <p class="text-lg font-bold text-white serif-title mb-1">소담장 (素潭莊)</p>
+                <p class="text-xs text-stone-500 font-light">생각이 맑아지는 소소하고 맑은 연못 같은 여행 기록 보관소</p>
+            </div>
+            <div class="flex gap-4 text-sm font-light">
+                <a href="#" class="hover:text-white transition-colors">홈</a>
+                <span class="text-stone-700">|</span>
+                <a href="#" onclick="openWriteModal(); return false;" class="hover:text-white transition-colors">새 기록 등록</a>
+            </div>
+            <div class="text-xs text-stone-600">
+                <p>© 2026 소담장. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // 초기 기본 예시 데이터
+        const DEFAULT_POSTS = [
+            {
+                id: "default-1",
+                category: "world",
+                mood: "amber",
+                title: "한 달간의 유럽 배낭여행, 첫 목적지 파리",
+                excerpt: "에펠탑의 노란 야경부터 골목길 아침 빵집의 크루아상 향기까지, 오랜 꿈이었던 파리에서의 첫 일주일을 되돌아봅니다.",
+                date: "2026-06-01",
+                image: ""
+            },
+            {
+                id: "default-2",
+                category: "domestic",
+                mood: "indigo",
+                title: "주말에 떠나는 고즈넉한 경주 한옥 스테이",
+                excerpt: "복잡한 현대 도심을 잠시 벗어나 따뜻하게 데워진 온돌방과 조용한 대나무 숲길을 거닐며 보낸 힐링 주말 바캉스.",
+                date: "2026-05-24",
+                image: ""
+            },
+            {
+                id: "default-3",
+                category: "bike",
+                mood: "emerald",
+                title: "국토종주 도전기! 한강에서 낙동강까지의 여정",
+                excerpt: "두 바퀴 자전거와 내 두 다리에 의지해 달린 뜨거운 국토종주 코스별 고개 하이라이트 팁과 필수 장비 정보 정리.",
+                date: "2026-05-12",
+                image: ""
+            },
+            {
+                id: "default-4",
+                category: "etc",
+                mood: "neutral",
+                title: "나만의 최적화된 여행용 사진 장비 정착 가이드",
+                excerpt: "어깨의 무게는 덜어주면서 인생 샷을 건질 수 있게 해준 내돈내산 미러리스 바디와 가벼운 단렌즈 조합 최종 보고서.",
+                date: "2026-04-30",
+                image: ""
+            },
+            {
+                id: "default-5",
+                category: "bike",
+                mood: "emerald",
+                title: "제주도 환상자전거길 2박 3일 바다 라이딩",
+                excerpt: "코발트빛 제주 에메랄드 해안도로를 우측에 끼고 온전한 바닷바람을 가르며 페달링하는 꿈의 자전거 일주 정보.",
+                date: "2026-04-15",
+                image: ""
+            }
+        ];
+
+        // 상태값 관리
+        let blogPosts = [];
+        let currentFilter = 'all';
+        let uploadedImageBase64 = ""; // 업로드할 이미지의 Base64 데이터가 담길 변수
+
+        // 앱 초기화 로드
+        window.addEventListener('DOMContentLoaded', () => {
+            // 로컬 스토리지 데이터 로드 시도
+            const stored = localStorage.getItem('sodamjang_posts');
+            if (stored) {
+                blogPosts = JSON.parse(stored);
+            } else {
+                blogPosts = [...DEFAULT_POSTS];
+                localStorage.setItem('sodamjang_posts', JSON.stringify(blogPosts));
+            }
+
+            // 오늘 날짜 기본 세팅
+            document.getElementById('postDate').value = new Date().toISOString().substring(0, 10);
+
+            // 포스트 카드 렌더링
+            renderPosts();
+        });
+
+        // 테마 한국어 뱃지 및 스타일 매핑 딕셔너리
+        const THEME_MAP = {
+            world: { text: "세계여행", emoji: "🌍", bg: "bg-amber-100 text-amber-800 border-amber-200" },
+            domestic: { text: "국내여행", emoji: "🏞️", bg: "bg-indigo-100 text-indigo-800 border-indigo-200" },
+            bike: { text: "자전거여행", emoji: "🚴", bg: "bg-emerald-100 text-emerald-800 border-emerald-200" },
+            etc: { text: "기타 기록", emoji: "🎒", bg: "bg-stone-200 text-stone-800 border-stone-300" }
+        };
+
+        // 무드 색상 테마 클래스 매핑
+        const MOOD_MAP = {
+            emerald: "from-emerald-50 to-teal-100 text-emerald-700 border-emerald-200",
+            indigo: "from-indigo-50 to-blue-100 text-indigo-700 border-indigo-200",
+            amber: "from-amber-50 to-orange-100 text-amber-700 border-amber-200",
+            rose: "from-rose-50 to-pink-100 text-rose-700 border-rose-200",
+            neutral: "from-stone-100 to-slate-200 text-stone-700 border-stone-300"
+        };
+
+        // 포스트 출력 함수
+        function renderPosts() {
+            const container = document.getElementById('postsContainer');
+            const emptyState = document.getElementById('emptyState');
+            container.innerHTML = '';
+
+            // 선택된 필터에 따라 필터링
+            const filtered = blogPosts.filter(post => {
+                return currentFilter === 'all' || post.category === currentFilter;
+            });
+
+            // 개수 업데이트
+            document.getElementById('post-count').innerText = filtered.length;
+
+            if (filtered.length === 0) {
+                container.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                return;
+            } else {
+                container.classList.remove('hidden');
+                emptyState.classList.add('hidden');
+            }
+
+            // 최신 날짜 역순 정렬
+            filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            // 엘리먼트 렌더링
+            filtered.forEach(post => {
+                const themeInfo = THEME_MAP[post.category] || THEME_MAP['etc'];
+                const moodClass = MOOD_MAP[post.mood] || MOOD_MAP['neutral'];
+
+                const article = document.createElement('article');
+                article.className = 'post-card bg-white border border-stone-100 rounded-2xl overflow-hidden flex flex-col hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group relative';
+                article.setAttribute('data-category', post.category);
+
+                // 첨부된 사진 유무에 따라 상단 영역 디자인 분기
+                let topVisualHtml = "";
+                if (post.image) {
+                    topVisualHtml = `
+                        <div class="h-44 w-full overflow-hidden relative select-none">
+                            <img src="${post.image}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" alt="${escapeHtml(post.title)}">
+                            <span class="absolute bottom-3 left-3 bg-stone-900/60 text-white text-xs px-2.5 py-1 rounded-full backdrop-blur-sm flex items-center gap-1">
+                                <span>${themeInfo.emoji}</span>
+                                <span>${themeInfo.text}</span>
+                            </span>
+                            <!-- 글 삭제 버튼 -->
+                            <button onclick="deletePost('${post.id}', event)" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/70 hover:bg-white hover:text-rose-600 flex items-center justify-center text-slate-800 shadow-sm transition-all focus:outline-none" title="이 기록 삭제하기">
+                                <i class="fa-regular fa-trash-can text-sm"></i>
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    topVisualHtml = `
+                        <!-- 카드 비주얼 대표 영역 (그라데이션 & 이모지) -->
+                        <div class="h-44 bg-gradient-to-br ${moodClass} flex flex-col items-center justify-center p-6 relative select-none">
+                            <span class="text-4xl mb-2 drop-shadow-sm transition-transform duration-500 group-hover:scale-110">${themeInfo.emoji}</span>
+                            <span class="text-xs tracking-widest font-mono opacity-60 uppercase">${post.category}</span>
+                            
+                            <!-- 글 삭제 버튼 -->
+                            <button onclick="deletePost('${post.id}', event)" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/40 hover:bg-white/80 hover:text-rose-600 flex items-center justify-center text-slate-600 shadow-sm transition-all focus:outline-none" title="이 기록 삭제하기">
+                                <i class="fa-regular fa-trash-can text-sm"></i>
+                            </button>
+                        </div>
+                    `;
+                }
+
+                article.innerHTML = `
+                    ${topVisualHtml}
+
+                    <!-- 카드 콘텐츠 영역 -->
+                    <div class="p-6 flex flex-col flex-grow">
+                        <!-- 카테고리 뱃지 -->
+                        <div class="mb-3.5">
+                            <span class="text-xs px-2.5 py-1 rounded-md border font-medium ${themeInfo.bg}">
+                                ${themeInfo.text}
+                            </span>
+                        </div>
+                        
+                        <!-- 제목 -->
+                        <h4 class="text-base font-bold text-stone-800 mb-2 leading-snug group-hover:text-emerald-700 transition-colors cursor-pointer serif-title">
+                            ${escapeHtml(post.title)}
+                        </h4>
+                        
+                        <!-- 본문 내용 -->
+                        <p class="text-stone-600 text-sm font-light leading-relaxed mb-4 flex-grow line-clamp-3">
+                            ${escapeHtml(post.excerpt)}
+                        </p>
+                        
+                        <!-- 하단 메타정보 -->
+                        <div class="flex items-center justify-between text-xs text-stone-400 pt-3.5 border-t border-stone-50">
+                            <div class="flex items-center gap-1.5">
+                                <i class="fa-regular fa-calendar-check text-stone-300"></i>
+                                <span>${post.date}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(article);
+            });
+        }
+
+        // 카테고리 필터 조작
+        function filterPosts(category, button) {
+            currentFilter = category;
+            
+            // 모든 탭 버튼에서 액티브 스타일 제거 후 적용
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(btn => {
+                btn.classList.remove('active', 'bg-emerald-600', 'text-white');
+                btn.classList.add('text-stone-600', 'hover:bg-stone-200/60');
+            });
+
+            // 지정한 탭에 활성화 부여
+            if (button) {
+                button.classList.add('active', 'bg-emerald-600', 'text-white');
+                button.classList.remove('text-stone-600', 'hover:bg-stone-200/60');
+            }
+
+            // 서브타이틀 명칭 변경
+            const titleEl = document.getElementById('current-category-title');
+            if (category === 'all') {
+                titleEl.innerText = "전체 여정";
+            } else {
+                titleEl.innerText = `${THEME_MAP[category].emoji} ${THEME_MAP[category].text}`;
+            }
+
+            // 다시 렌더링
+            renderPosts();
+        }
+
+        // 글쓰기 창 열기
+        function openWriteModal() {
+            const modal = document.getElementById('writeModal');
+            const container = document.getElementById('modalContainer');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.add('opacity-100');
+                container.classList.remove('scale-95');
+                container.classList.add('scale-100');
+            }, 10);
+            
+            // 폼 필드 리셋
+            document.getElementById('postTitle').value = '';
+            document.getElementById('postExcerpt').value = '';
+            document.getElementById('postTheme').value = '';
+            document.getElementById('postDate').value = new Date().toISOString().substring(0, 10);
+            
+            // 이미지 첨부 관련 리셋
+            clearSelectedImage();
+
+            // 테마 하이라이트 지우기
+            const options = document.querySelectorAll('.theme-option');
+            options.forEach(opt => opt.classList.remove('border-emerald-600', 'bg-emerald-50/50', 'ring-2', 'ring-emerald-200'));
+        }
+
+        // 글쓰기 창 닫기
+        function closeWriteModal() {
+            const modal = document.getElementById('writeModal');
+            const container = document.getElementById('modalContainer');
+            modal.classList.remove('opacity-100');
+            container.classList.remove('scale-100');
+            container.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        // 테마 선택 이벤트
+        function selectTheme(themeValue) {
+            document.getElementById('postTheme').value = themeValue;
+            
+            const options = document.querySelectorAll('.theme-option');
+            options.forEach(opt => {
+                if (opt.getAttribute('data-value') === themeValue) {
+                    opt.classList.add('border-emerald-600', 'bg-emerald-50/50', 'ring-2', 'ring-emerald-100');
+                } else {
+                    opt.classList.remove('border-emerald-600', 'bg-emerald-50/50', 'ring-2', 'ring-emerald-100');
+                }
+            });
+        }
+
+        // 이미지 미리보기 기능 구현
+        function previewSelectedImage(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+
+                // 이미지 크기 용량 한도 체크 (Local Storage 저장을 고려하여 2MB 내외 권장)
+                if (file.size > 2 * 1024 * 1024) {
+                    showToast("<i class='fa-solid fa-circle-exclamation text-rose-500'></i>", "원활한 보관을 위해 사진은 2MB 이하로 올려주세요.");
+                    input.value = "";
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    uploadedImageBase64 = e.target.result;
+                    
+                    const imgPreview = document.getElementById('imagePreview');
+                    const placeholder = document.getElementById('uploadPlaceholder');
+                    const btnRemove = document.getElementById('btnRemoveImage');
+
+                    imgPreview.src = uploadedImageBase64;
+                    imgPreview.classList.remove('hidden');
+                    placeholder.classList.add('hidden');
+                    btnRemove.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // 첨부된 이미지 지우기/초기화
+        function clearSelectedImage() {
+            uploadedImageBase64 = "";
+            document.getElementById('postImage').value = "";
+            
+            const imgPreview = document.getElementById('imagePreview');
+            const placeholder = document.getElementById('uploadPlaceholder');
+            const btnRemove = document.getElementById('btnRemoveImage');
+
+            imgPreview.src = "";
+            imgPreview.classList.add('hidden');
+            placeholder.classList.remove('hidden');
+            btnRemove.classList.add('hidden');
+        }
+
+        // 새 포스트 작성 저장
+        function saveNewPost() {
+            const theme = document.getElementById('postTheme').value;
+            const title = document.getElementById('postTitle').value.trim();
+            const excerpt = document.getElementById('postExcerpt').value.trim();
+            const date = document.getElementById('postDate').value;
+            const mood = document.querySelector('input[name="moodColor"]:checked').value;
+
+            // 유효성 체크
+            if (!theme) {
+                showToast("<i class='fa-solid fa-circle-exclamation text-rose-500'></i>", "여행 테마를 반드시 한 가지 선택해 주세요.");
+                return;
+            }
+            if (!title) {
+                showToast("<i class='fa-solid fa-circle-exclamation text-rose-500'></i>", "기록의 제목을 입력해 주세요.");
+                return;
+            }
+            if (!excerpt) {
+                showToast("<i class='fa-solid fa-circle-exclamation text-rose-500'></i>", "추억할 만한 여행 내용을 적어주세요.");
+                return;
+            }
+            if (!date) {
+                showToast("<i class='fa-solid fa-circle-exclamation text-rose-500'></i>", "다녀오신 날짜를 선택해 주세요.");
+                return;
+            }
+
+            // 고유 식별자 생성
+            const newId = 'post-' + Date.now();
+
+            const newPost = {
+                id: newId,
+                category: theme,
+                mood: mood,
+                title: title,
+                excerpt: excerpt,
+                date: date,
+                image: uploadedImageBase64 // 첨부한 Base64 이미지 정보 할당 (없으면 빈 문자열)
+            };
+
+            // 데이터 목록 추가 및 영구 저장
+            blogPosts.unshift(newPost);
+            localStorage.setItem('sodamjang_posts', JSON.stringify(blogPosts));
+
+            // 글쓰기창 종료
+            closeWriteModal();
+
+            // 추가 요청 사항: 글을 쓰고 지정한 테마(카테고리) 화면으로 이동하여 즉시 포스트 목록 확인이 가능하도록 매핑 처리
+            const targetTabButton = document.getElementById(`btn-${theme}`);
+            filterPosts(theme, targetTabButton);
+
+            // 성공 알림 피드백
+            showToast("<i class='fa-solid fa-circle-check text-emerald-400'></i>", "새로운 소중한 여행 조각을 소담장에 기록했습니다.");
+        }
+
+        // 포스트 삭제 처리
+        function deletePost(postId, event) {
+            // 이벤트 전파 정지 (카드 본문 클릭 방지)
+            event.stopPropagation();
+
+            // 삭제 타겟 찾기
+            const index = blogPosts.findIndex(post => post.id === postId);
+            if (index !== -1) {
+                // 커스텀 다이얼로그나 직관적인 간편 확인 UI 대체 (alert/confirm 금지 규칙 준수)
+                const check = document.createElement('div');
+                check.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4';
+                check.innerHTML = `
+                    <div class="bg-white rounded-xl p-6 max-w-sm w-full shadow-2xl">
+                        <h5 class="font-bold text-stone-800 text-base mb-2 serif-title">여행 기록을 비울까요?</h5>
+                        <p class="text-stone-500 text-sm mb-5 font-light">삭제한 기록은 다시 복구할 수 없습니다. 정말 비워내시겠습니까?</p>
+                        <div class="flex gap-2 justify-end">
+                            <button id="cancelDelBtn" class="px-4 py-2 text-xs font-medium text-stone-500 hover:text-stone-700">보관하기</button>
+                            <button id="confirmDelBtn" class="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 rounded-lg text-xs font-medium transition-all">지우기</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(check);
+
+                // 예/아니오 이벤트 핸들링
+                check.querySelector('#cancelDelBtn').onclick = () => {
+                    check.remove();
+                };
+                check.querySelector('#confirmDelBtn').onclick = () => {
+                    blogPosts.splice(index, 1);
+                    localStorage.setItem('sodamjang_posts', JSON.stringify(blogPosts));
+                    renderPosts();
+                    check.remove();
+                    showToast("<i class='fa-regular fa-trash-can text-stone-400'></i>", "선택하신 추억 카드를 조심스럽게 비웠습니다.");
+                };
+            }
+        }
+
+        // 피드백용 깔끔한 토스트 알림 표시기
+        function showToast(iconHtml, msg) {
+            const toast = document.getElementById('toast');
+            const toastIcon = document.getElementById('toastIcon');
+            const toastMessage = document.getElementById('toastMessage');
+
+            toastIcon.innerHTML = iconHtml;
+            toastMessage.innerText = msg;
+
+            toast.classList.remove('translate-y-12', 'opacity-0', 'pointer-events-none');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-12', 'opacity-0', 'pointer-events-none');
+                toast.classList.remove('translate-y-0', 'opacity-100');
+            }, 3000);
+        }
+
+        // HTML 이스케이프 함수 (보안 방어)
+        function escapeHtml(str) {
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
